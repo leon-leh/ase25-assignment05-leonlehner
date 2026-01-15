@@ -1,6 +1,7 @@
 package de.unibayreuth.se.taskboard;
 
 import de.unibayreuth.se.taskboard.api.dtos.TaskDto;
+import de.unibayreuth.se.taskboard.api.dtos.UserDto;
 import de.unibayreuth.se.taskboard.api.mapper.TaskDtoMapper;
 import de.unibayreuth.se.taskboard.business.domain.Task;
 import io.restassured.http.ContentType;
@@ -66,4 +67,48 @@ public class TaskBoardSystemTests extends AbstractSystemTest {
     }
 
     //TODO: Add at least one test for each new endpoint in the users controller (the create endpoint can be tested as part of the other endpoints).
+    @Test
+    void usersEndpoints() {
+        // create two users via REST
+        UserDto user1 = given()
+                .contentType(ContentType.JSON)
+                .body(java.util.Map.of("name", "Denise"))
+                .when()
+                .post("/api/users")
+                .then()
+                .statusCode(200)
+                .extract().as(UserDto.class);
+
+        UserDto user2 = given()
+                .contentType(ContentType.JSON)
+                .body(java.util.Map.of("name", "Egon"))
+                .when()
+                .post("/api/users")
+                .then()
+                .statusCode(200)
+                .extract().as(UserDto.class);
+
+        // retrieve all users
+        given()
+                .contentType(ContentType.JSON)
+                .when()
+                .get("/api/users")
+                .then()
+                .statusCode(200)
+                .body(".", hasSize(2));
+
+        // get user by id
+        given()
+                .when()
+                .get("/api/users/{id}", user1.getId())
+                .then()
+                .statusCode(200);
+
+        // non-existent user should return 400
+        given()
+                .when()
+                .get("/api/users/{id}", java.util.UUID.randomUUID())
+                .then()
+                .statusCode(400);
+    }
 }
